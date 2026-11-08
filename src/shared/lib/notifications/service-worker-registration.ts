@@ -13,7 +13,24 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
-    const registration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+    // Se já existe um SW no controle, recarrega a página quando um novo assume.
+    // Sem isso, o JS antigo continua rodando com IDs de Server Actions de um
+    // deploy anterior e o servidor responde "Server Action was not found".
+    if (navigator.serviceWorker.controller) {
+      let reloading = false
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloading) return
+        reloading = true
+        window.location.reload()
+      })
+    }
+
+    const registration = await navigator.serviceWorker.register('/service-worker.js', {
+      scope: '/',
+      // Nunca serve o próprio SW do cache HTTP: garante que a atualização
+      // seja detectada logo após um novo deploy.
+      updateViaCache: 'none',
+    })
     registration.addEventListener('updatefound', () => {
       const worker = registration.installing
       worker?.addEventListener('statechange', () => {
