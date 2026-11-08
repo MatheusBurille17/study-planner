@@ -1,0 +1,34 @@
+project_id = "amanda-study-planner"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/reset-password", "http://localhost:3000/dashboard"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+
+[functions.send-reminders]
+verify_jwt = false
+# Configure o CRON no painel do Supabase (a cada 5 minutos):
+# select cron.schedule('send-reminders', '*/5 * * * *',
+#   $$select net.http_post(url := '<SUPABASE_URL>/functions/v1/send-reminders')$$);
