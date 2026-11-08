@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { validateSubject, subjectColor } from '@/features/subjects/domain/subject'
 import { isQuietHours, shouldSendNotification } from '@/features/notifications/domain/rules'
 import { DEFAULT_NOTIFICATION_PREFERENCES } from '@/features/notifications/domain/repository'
@@ -18,6 +18,17 @@ describe('disciplinas', () => {
 })
 
 describe('preferências de notificação', () => {
+  // Fixa o horário fora do silêncio padrão (22:00–07:00) para o teste não
+  // falhar apenas por ter sido executado à noite.
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-01-01T12:00:00'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   const preferences = {
     userId: 'user-1',
     ...DEFAULT_NOTIFICATION_PREFERENCES,

@@ -2,6 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  env: {
+    // Identifica o deploy que gerou o bundle em execução no navegador.
+    // O VersionGuard compara com /api/version e força atualização se divergir.
+    NEXT_PUBLIC_BUILD_ID:
+      process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_URL || '',
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',

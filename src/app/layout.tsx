@@ -4,6 +4,7 @@ import { ToastProvider } from '@/shared/components/ui/toast'
 import { AuthProvider } from '@/features/auth/presentation/components/AuthProvider'
 import { QueryProvider } from '@/shared/config/queryClient'
 import { ServiceWorkerInitializer } from '@/features/notifications/presentation/components/ServiceWorkerInitializer'
+import { VersionGuard } from '@/shared/components/VersionGuard'
 import { APP_NAME, APP_SHORT_NAME } from '@/shared/constants/config'
 
 export const metadata: Metadata = {

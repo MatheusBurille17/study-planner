@@ -13,6 +13,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/auth/refresh',
   '/api/auth/register',
   '/api/health',
+  '/api/version',
   '/api/notifications/send',
 ]
 
