@@ -18,7 +18,9 @@ import {
   type Task,
 } from '@/shared/types/activity'
 import type { Subject } from '@/shared/types/subject'
-import { combineDateAndTime, parseISODate, toISODate } from '@/shared/utils/dateHelpers'
+import { parseISODate, toISODate } from '@/shared/utils/dateHelpers'
+import { getUserTimeZone } from '@/shared/utils/timezone'
+import { resolveEventDateTime } from '../../domain/rules'
 import { FormField } from './FormField'
 import { SegmentedControl } from './FormControls'
 import { ReminderConfigurator } from './ReminderConfigurator'
@@ -71,7 +73,9 @@ export function TaskForm({ subjects, initialActivity, mode = 'create' }: TaskFor
 
   const eventDate = useMemo(() => {
     const date = parseISODate(form.dueDate)
-    return date ? combineDateAndTime(date, form.dueTime || undefined) : undefined
+    return date
+      ? resolveEventDateTime({ type: 'task', dueDate: date, dueTime: form.dueTime || undefined })
+      : undefined
   }, [form.dueDate, form.dueTime])
 
   async function onSubmit(event: React.FormEvent) {
@@ -93,6 +97,7 @@ export function TaskForm({ subjects, initialActivity, mode = 'create' }: TaskFor
       estimatedTimeMinutes: form.estimatedTimeMinutes === '' ? undefined : Number(form.estimatedTimeMinutes),
       tags: tags.length ? tags : undefined,
       reminders: reminders.length ? reminders : undefined,
+      timezone: getUserTimeZone(),
     }
 
     const schema = mode === 'edit' ? updateTaskSchema : createTaskSchema
@@ -295,7 +300,13 @@ export function TaskForm({ subjects, initialActivity, mode = 'create' }: TaskFor
       </section>
 
       <section className="rounded-3xl border border-line bg-surface p-5 shadow-card">
-        <ReminderConfigurator reminders={reminders} onChange={setReminders} eventDate={eventDate} />
+        <ReminderConfigurator
+          reminders={reminders}
+          onChange={setReminders}
+          eventDate={eventDate}
+          eventHasTime={Boolean(form.dueTime)}
+          error={errors.reminders?.[0]}
+        />
       </section>
 
       {serverError && (

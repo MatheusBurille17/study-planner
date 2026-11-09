@@ -21,6 +21,12 @@ export const DEFAULT_REMINDER_RULES = {
   quietHoursEnd: '07:00',
 }
 
+/**
+ * Quando a atividade não tem horário, os lembretes relativos usam o fim do dia
+ * como referência (ex.: "3 horas antes" = 20:59 do dia do prazo).
+ */
+export const DEFAULT_EVENT_TIME = '23:59'
+
 /** Regras nomeadas usadas pelo formatador e pelo agendador. */
 export const REMINDER_RULES = {
   exam: { hoursBefore: 24, label: '1 dia antes' },

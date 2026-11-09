@@ -16,11 +16,12 @@ import {
 } from '@/shared/types/activity'
 import type { Subject } from '@/shared/types/subject'
 import {
-  combineDateAndTime,
   formatWeekday,
   parseISODate,
   toISODate,
 } from '@/shared/utils/dateHelpers'
+import { getUserTimeZone } from '@/shared/utils/timezone'
+import { resolveEventDateTime } from '../../domain/rules'
 import { FormField } from './FormField'
 import { SegmentedControl } from './FormControls'
 import { ReminderConfigurator } from './ReminderConfigurator'
@@ -73,7 +74,9 @@ export function ExamForm({ subjects, initialActivity, mode = 'create' }: ExamFor
 
   const eventDate = useMemo(() => {
     const date = parseISODate(form.date)
-    return date ? combineDateAndTime(date, form.time || undefined) : undefined
+    return date
+      ? resolveEventDateTime({ type: 'exam', date, time: form.time || undefined })
+      : undefined
   }, [form.date, form.time])
 
   const selectedSubject = subjects.find((subject) => subject.id === form.subjectId)
@@ -98,6 +101,7 @@ export function ExamForm({ subjects, initialActivity, mode = 'create' }: ExamFor
       location: form.location || undefined,
       notes: form.notes || undefined,
       reminders: reminders.length ? reminders : undefined,
+      timezone: getUserTimeZone(),
     }
 
     const schema = mode === 'edit' ? updateExamSchema : createExamSchema
@@ -289,7 +293,13 @@ export function ExamForm({ subjects, initialActivity, mode = 'create' }: ExamFor
       </section>
 
       <section className="rounded-3xl border border-line bg-surface p-5 shadow-card">
-        <ReminderConfigurator reminders={reminders} onChange={setReminders} eventDate={eventDate} />
+        <ReminderConfigurator
+          reminders={reminders}
+          onChange={setReminders}
+          eventDate={eventDate}
+          eventHasTime={Boolean(form.time)}
+          error={errors.reminders?.[0]}
+        />
       </section>
 
       {serverError && (

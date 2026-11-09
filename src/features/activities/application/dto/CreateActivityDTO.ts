@@ -28,6 +28,8 @@ export interface CreateActivityDTO {
   assignmentType?: AssignmentType
   criteria?: string
   reminders?: ReminderInput[]
+  /** Fuso IANA do usuário, para calcular lembretes no horário de parede correto. */
+  timezone?: string
 }
 
 export interface CreateActivityOutput {

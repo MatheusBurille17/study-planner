@@ -1,4 +1,5 @@
 import type { Activity } from '@/shared/types/activity'
+import { toDate } from '@/shared/utils/dateHelpers'
 
 /** Converte Datas para ISO ao persistir em JSON. */
 export function serializeActivity(activity: Activity): Record<string, unknown> {
@@ -29,32 +30,26 @@ export function serializeActivity(activity: Activity): Record<string, unknown> {
   }
 }
 
-function asDate(value: unknown): Date | undefined {
-  if (!value) return undefined
-  const date = value instanceof Date ? value : new Date(String(value))
-  return Number.isNaN(date.getTime()) ? undefined : date
-}
-
 /** Converte dados persistidos de volta para entidades de domínio. */
 export function deserializeActivity(row: Record<string, unknown>): Activity {
   const base = {
     ...row,
-    createdAt: asDate(row.createdAt) ?? new Date(),
-    updatedAt: asDate(row.updatedAt) ?? new Date(),
-    dueDate: asDate(row.dueDate),
-    date: asDate(row.date),
-    submittedAt: asDate(row.submittedAt),
-    gradedAt: asDate(row.gradedAt),
-    deletedAt: asDate(row.deletedAt),
+    createdAt: toDate(row.createdAt) ?? new Date(),
+    updatedAt: toDate(row.updatedAt) ?? new Date(),
+    dueDate: toDate(row.dueDate),
+    date: toDate(row.date),
+    submittedAt: toDate(row.submittedAt),
+    gradedAt: toDate(row.gradedAt),
+    deletedAt: toDate(row.deletedAt),
     reminders: Array.isArray(row.reminders)
       ? row.reminders.map((reminder) => {
           const value = reminder as Record<string, unknown>
           return {
             ...value,
-            reminderTimestamp: asDate(value.reminderTimestamp) ?? new Date(),
-            createdAt: asDate(value.createdAt) ?? new Date(),
-            updatedAt: asDate(value.updatedAt) ?? new Date(),
-            firedAt: asDate(value.firedAt),
+            reminderTimestamp: toDate(value.reminderTimestamp) ?? new Date(),
+            createdAt: toDate(value.createdAt) ?? new Date(),
+            updatedAt: toDate(value.updatedAt) ?? new Date(),
+            firedAt: toDate(value.firedAt),
           }
         })
       : [],

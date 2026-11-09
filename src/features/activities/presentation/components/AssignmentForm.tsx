@@ -18,11 +18,12 @@ import {
 } from '@/shared/types/activity'
 import type { Subject } from '@/shared/types/subject'
 import {
-  combineDateAndTime,
   getDaysRemaining,
   parseISODate,
   toISODate,
 } from '@/shared/utils/dateHelpers'
+import { getUserTimeZone } from '@/shared/utils/timezone'
+import { resolveEventDateTime } from '../../domain/rules'
 import { FormField } from './FormField'
 import { SegmentedControl } from './FormControls'
 import { ReminderConfigurator } from './ReminderConfigurator'
@@ -74,7 +75,9 @@ export function AssignmentForm({ subjects, initialActivity, mode = 'create' }: A
 
   const eventDate = useMemo(() => {
     const date = parseISODate(form.dueDate)
-    return date ? combineDateAndTime(date, form.dueTime || undefined) : undefined
+    return date
+      ? resolveEventDateTime({ type: 'assignment', dueDate: date, dueTime: form.dueTime || undefined })
+      : undefined
   }, [form.dueDate, form.dueTime])
 
   const daysRemaining = getDaysRemaining(parseISODate(form.dueDate))
@@ -92,6 +95,7 @@ export function AssignmentForm({ subjects, initialActivity, mode = 'create' }: A
       criteria: form.criteria || undefined,
       status: form.status,
       reminders: reminders.length ? reminders : undefined,
+      timezone: getUserTimeZone(),
     }
 
     const schema = mode === 'edit' ? updateAssignmentSchema : createAssignmentSchema
@@ -289,7 +293,13 @@ export function AssignmentForm({ subjects, initialActivity, mode = 'create' }: A
       </section>
 
       <section className="rounded-3xl border border-line bg-surface p-5 shadow-card">
-        <ReminderConfigurator reminders={reminders} onChange={setReminders} eventDate={eventDate} />
+        <ReminderConfigurator
+          reminders={reminders}
+          onChange={setReminders}
+          eventDate={eventDate}
+          eventHasTime={Boolean(form.dueTime)}
+          error={errors.reminders?.[0]}
+        />
       </section>
 
       {serverError && (

@@ -1,3 +1,5 @@
-export { Activity, Task, Exam, Assignment, createReminderEntity } from './activity'
+export { Activity, Task, Exam, Assignment } from './activity'
+export { createReminderEntity } from './reminder'
+export type { Reminder, ReminderInput } from './reminder'
 export * from './rules'
 export * from './repository'

@@ -5,7 +5,10 @@ import { requireUser, UnauthorizedError } from '@/shared/lib/auth/helpers'
 import { getActivityRepository } from '../../infrastructure/activityRepository'
 import { updateActivitySchema } from '../schemas/createActivitySchema'
 import { isConflict } from '../../application/useCases/detectConflict'
+import { buildActivityUpdate } from '../../application/useCases/buildActivityUpdate'
 import { validateStatusTransition } from '../../domain/stateMachines'
+import { ActivityRuleError } from '../../domain/rules'
+import { RepositoryError } from '../../domain/repository'
 import type { Activity, CreateActivityResult } from '@/shared/types/activity'
 
 /**
@@ -66,18 +69,13 @@ export async function updateActivityAction(input: unknown): Promise<CreateActivi
       }
     }
 
-    // Garante monotonicidade de updatedAt mesmo com clock skew.
-    const nextUpdatedAt = new Date(Math.max(Date.now(), existing.updatedAt.getTime() + 1))
-
-    const merged: Activity = {
-      ...existing,
-      ...data,
-      id: existing.id,
+    // Recalcula lembretes e monta a entidade final em um único lugar,
+    // compartilhado com a sincronização offline.
+    const merged = buildActivityUpdate({
+      existing,
+      data,
       userId: user.id,
-      type: existing.type,
-      createdAt: existing.createdAt,
-      updatedAt: nextUpdatedAt,
-    } as Activity
+    })
 
     const saved = await repository.update(merged)
     revalidatePath('/dashboard')
@@ -89,6 +87,18 @@ export async function updateActivityAction(input: unknown): Promise<CreateActivi
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       return { success: false, error: { code: 'UNAUTHORIZED', message: 'Usuário não autenticado' } }
+    }
+    if (error instanceof ActivityRuleError) {
+      return {
+        success: false,
+        error: { code: error.code, message: error.message, field: error.field },
+      }
+    }
+    if (error instanceof RepositoryError) {
+      return {
+        success: false,
+        error: { code: error.code, message: error.message },
+      }
     }
     console.error('[updateActivityAction]', error)
     return { success: false, error: { code: 'INTERNAL_ERROR', message: 'Erro ao atualizar atividade' } }

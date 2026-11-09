@@ -4,13 +4,11 @@ import {
   AssignmentType,
   ExamType,
   Priority,
-  ReminderType,
   TaskStatus,
   type Activity as ActivityData,
   type Assignment as AssignmentData,
   type Exam as ExamData,
   type Reminder,
-  type ReminderInput,
   type Task as TaskData,
 } from '@/shared/types/activity'
 import { ActivityRuleError, validateDeadline, validateMaxReminders } from './rules'
@@ -41,9 +39,7 @@ function createId(): string {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
     ? crypto.randomUUID()
     : `id-${Date.now()}-${Math.random().toString(36).slice(2)}`
-}
-
-export abstract class Activity {
+}export abstract class Activity {
   readonly id: string
   readonly userId: string
   readonly type: ActivityType | 'task' | 'exam' | 'assignment' | 'seminar'
@@ -370,27 +366,5 @@ export class Assignment extends Activity {
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     }
-  }
-}
-
-export function createReminderEntity(
-  input: ReminderInput,
-  activityId: string,
-  userId: string,
-  reminderTimestamp: Date,
-  offsetMinutes: number,
-): Reminder {
-  return {
-    ...input,
-    id: createId(),
-    activityId,
-    userId,
-    reminderType: input.reminderType ?? ReminderType.ONE_HOUR_BEFORE,
-    reminderOffsetMinutes: offsetMinutes,
-    reminderTimestamp,
-    isActive: true,
-    wasFired: false,
-    createdAt: new Date(),
-    updatedAt: new Date(),
   }
 }

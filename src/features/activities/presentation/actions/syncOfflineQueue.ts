@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireUser, UnauthorizedError } from '@/shared/lib/auth/helpers'
 import { getActivityRepository } from '../../infrastructure/activityRepository'
 import { updateActivitySchema } from '../schemas/updateActivitySchema'
+import { buildActivityUpdate } from '../../application/useCases/buildActivityUpdate'
 import type { Activity } from '@/shared/types/activity'
 
 export interface OfflineQueuePayloadItem {
@@ -58,15 +59,11 @@ export async function syncOfflineQueueAction(items: OfflineQueuePayloadItem[]): 
           continue
         }
 
-        const merged: Activity = {
-          ...existing,
-          ...parsed.data,
-          id: existing.id,
+        const merged = buildActivityUpdate({
+          existing,
+          data: parsed.data,
           userId: user.id,
-          type: existing.type,
-          createdAt: existing.createdAt,
-          updatedAt: new Date(Math.max(Date.now(), existing.updatedAt.getTime() + 1)),
-        } as Activity
+        })
         await repository.update(merged)
         result.synced.push(item.id)
       } catch (error) {

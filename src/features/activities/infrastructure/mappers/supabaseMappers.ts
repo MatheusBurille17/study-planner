@@ -1,9 +1,11 @@
-import type {
-  Activity,
-  Assignment,
-  Exam,
-  Reminder,
-  Task,
+import {
+  ReminderType,
+  type Activity,
+  type Assignment,
+  type Exam,
+  type Reminder,
+  type ReminderOffset,
+  type Task,
 } from '@/shared/types/activity'
 import type { Subject } from '@/shared/types/subject'
 import { asDate } from '@/shared/lib/dates'
@@ -21,13 +23,31 @@ function pickSpecialized(row: Row): Row {
   return {}
 }
 
+/**
+ * Reconstrói o offset do lembrete personalizado a partir dos minutos salvos,
+ * para que editar uma atividade não perca a configuração original.
+ */
+function mapReminderOffset(type: ReminderType, minutes: number): ReminderOffset | undefined {
+  if (type !== ReminderType.CUSTOM) return undefined
+  const safe = Math.max(0, minutes)
+  if (safe > 0 && safe % (24 * 60) === 0) {
+    return { value: safe / (24 * 60), unit: 'DAYS', inMinutes: safe }
+  }
+  if (safe > 0 && safe % 60 === 0) {
+    return { value: safe / 60, unit: 'HOURS', inMinutes: safe }
+  }
+  return { value: Math.max(1, safe), unit: 'MINUTES', inMinutes: safe }
+}
+
 function mapReminder(row: Row): Reminder {
+  const reminderType = row.reminder_type as Reminder['reminderType']
+  const offsetMinutes = Number(row.reminder_offset_minutes ?? 0)
   return {
     id: String(row.id),
     activityId: String(row.activity_id),
     userId: String(row.user_id),
-    reminderType: row.reminder_type as Reminder['reminderType'],
-    reminderOffsetMinutes: Number(row.reminder_offset_minutes ?? 0),
+    reminderType,
+    reminderOffsetMinutes: offsetMinutes,
     reminderTime: String(row.reminder_time ?? '09:00').slice(0, 5),
     reminderTimestamp: asDate(row.reminder_timestamp) ?? new Date(),
     isActive: Boolean(row.is_active ?? true),
@@ -35,7 +55,7 @@ function mapReminder(row: Row): Reminder {
     firedAt: asDate(row.fired_at),
     createdAt: asDate(row.created_at) ?? new Date(),
     updatedAt: asDate(row.updated_at) ?? new Date(),
-    reminderOffset: undefined,
+    reminderOffset: mapReminderOffset(reminderType, offsetMinutes),
   }
 }
 

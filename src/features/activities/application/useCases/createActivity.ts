@@ -1,15 +1,13 @@
-import type { Activity, Reminder } from '@/shared/types/activity'
+import type { Activity } from '@/shared/types/activity'
 import type { ActivityRepository } from '../../domain/repository'
-import { ActivityRuleError, validateNoDuplicateReminders } from '../../domain/rules'
+import { ActivityRuleError, buildReminders, resolveEventDateTime } from '../../domain/rules'
 import {
   Assignment as AssignmentEntity,
   Exam as ExamEntity,
   Task as TaskEntity,
-  createReminderEntity,
 } from '../../domain/activity'
-import { calculateReminderTimestampForEvent, reminderOffsetMinutes } from '../../infrastructure/reminderCalculator'
 import { handleSupabaseError } from '../errorHandler'
-import { combineDateAndTime, toDate } from '@/shared/utils/dateHelpers'
+import { toDate } from '@/shared/utils/dateHelpers'
 import type { CreateActivityDTO, CreateActivityOutput } from '../dto/CreateActivityDTO'
 
 /** Converte Date | string em Date com validação. */
@@ -34,59 +32,32 @@ export class CreateActivityUseCase {
 
       let eventDate: Date | undefined
       if (input.type === 'task' && input.dueDate) {
-        eventDate = combineDateAndTime(requireDate(input.dueDate, 'dueDate'), input.dueTime)
+        eventDate = resolveEventDateTime(
+          { type: 'task', dueDate: requireDate(input.dueDate, 'dueDate'), dueTime: input.dueTime },
+          input.timezone,
+        )
       } else if (input.type === 'exam') {
-        eventDate = combineDateAndTime(requireDate(input.date, 'date'), input.time)
+        eventDate = resolveEventDateTime(
+          { type: 'exam', date: requireDate(input.date, 'date'), time: input.time },
+          input.timezone,
+        )
       } else if (input.type === 'assignment') {
-        eventDate = combineDateAndTime(requireDate(input.dueDate, 'dueDate'), input.dueTime)
+        eventDate = resolveEventDateTime(
+          { type: 'assignment', dueDate: requireDate(input.dueDate, 'dueDate'), dueTime: input.dueTime },
+          input.timezone,
+        )
       }
 
       const activityId = crypto.randomUUID()
-      const reminders: Reminder[] = []
-      if (input.reminders?.length) {
-        if (input.reminders.length > 3) {
-          throw new ActivityRuleError('Máximo de 3 lembretes por atividade', 'MAX_REMINDERS', 'reminders')
-        }
-        if (!eventDate) {
-          throw new ActivityRuleError(
-            'Defina a data do evento antes de adicionar lembretes',
-            'MISSING_EVENT_DATE',
-            'reminders',
-          )
-        }
-        for (const reminderInput of input.reminders) {
-          const timestamp = calculateReminderTimestampForEvent(
-            eventDate,
-            reminderInput.reminderType,
-            reminderInput.reminderTime,
-            reminderInput.reminderOffset,
-          )
-          if (timestamp.getTime() >= eventDate.getTime()) {
-            throw new ActivityRuleError(
-              'O lembrete deve ser anterior ao evento',
-              'REMINDER_AFTER_EVENT',
-              'reminders',
-            )
-          }
-          if (timestamp.getTime() < now.getTime()) {
-            throw new ActivityRuleError(
-              'O lembrete não pode estar no passado',
-              'REMINDER_IN_PAST',
-              'reminders',
-            )
-          }
-          reminders.push(
-            createReminderEntity(
-              reminderInput,
-              activityId,
-              input.userId,
-              timestamp,
-              reminderOffsetMinutes(reminderInput.reminderType, reminderInput.reminderOffset),
-            ),
-          )
-        }
-        validateNoDuplicateReminders(reminders)
-      }
+      const reminders = buildReminders({
+        activityId,
+        userId: input.userId,
+        eventDate,
+        reminders: input.reminders,
+        now,
+        allowPast: false,
+        timeZone: input.timezone,
+      })
 
       let entity: TaskEntity | ExamEntity | AssignmentEntity
 

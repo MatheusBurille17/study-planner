@@ -16,9 +16,31 @@ import { ptBR } from 'date-fns/locale'
 
 export { ptBR }
 
+/** `yyyy-MM-dd` (data sem hora/fuso). */
+export const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * Converte uma data de calendário (`yyyy-MM-dd`) em Date no fuso local.
+ *
+ * Usa meio-dia local de propósito: evita que a data "vire" o dia quando o
+ * mesmo instante é formatado em outro fuso (ex.: servidor em UTC).
+ */
+export function parseDateOnly(value: string | null | undefined): Date | undefined {
+  if (!value || !DATE_ONLY_PATTERN.test(value)) return undefined
+  const parsed = parse(value, 'yyyy-MM-dd', new Date())
+  if (!isValid(parsed)) return undefined
+  parsed.setHours(12, 0, 0, 0)
+  return parsed
+}
+
 export function toDate(value: unknown): Date | undefined {
   if (!value) return undefined
   if (value instanceof Date) return isValid(value) ? value : undefined
+  if (typeof value === 'string') {
+    // Datas sem hora devem ser lidas como calendário local, nunca como UTC.
+    const dateOnly = parseDateOnly(value)
+    if (dateOnly) return dateOnly
+  }
   if (typeof value === 'string' || typeof value === 'number') {
     const date = new Date(value)
     return isValid(date) ? date : undefined
@@ -60,9 +82,7 @@ export function toISODate(value: Date | string | undefined): string {
 }
 
 export function parseISODate(value: string | null | undefined): Date | undefined {
-  if (!value) return undefined
-  const date = parse(value, 'yyyy-MM-dd', new Date())
-  return isValid(date) ? date : undefined
+  return parseDateOnly(value)
 }
 
 export function combineDateAndTime(date: Date, time?: string): Date {

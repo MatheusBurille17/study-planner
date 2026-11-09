@@ -3,6 +3,7 @@
 import type { CreateActivityDTO } from '@/features/activities/application/dto/CreateActivityDTO'
 import type { Activity } from '@/shared/types/activity'
 import { createActivityAction } from '@/features/activities/presentation/actions/createActivity'
+import { toDate } from '@/shared/utils/dateHelpers'
 import {
   addToSyncQueue,
   getActivitiesByUser,
@@ -44,7 +45,7 @@ function buildLocalActivity(payload: CreateActivityDTO, id: string): Activity {
       ...base,
       type: 'task',
       title: payload.title ?? 'Nova tarefa',
-      dueDate: payload.dueDate ? new Date(payload.dueDate) : undefined,
+      dueDate: toDate(payload.dueDate),
       dueTime: payload.dueTime,
       priority: payload.priority ?? ('MEDIUM' as never),
       status: payload.status ?? ('TODO' as never),
@@ -57,7 +58,7 @@ function buildLocalActivity(payload: CreateActivityDTO, id: string): Activity {
       ...base,
       type: 'exam',
       title: payload.title ?? 'Nova prova',
-      date: payload.date ? new Date(payload.date) : now,
+      date: toDate(payload.date) ?? now,
       time: payload.time,
       examType: payload.examType ?? ('WRITTEN' as never),
       content: payload.content,
@@ -70,7 +71,7 @@ function buildLocalActivity(payload: CreateActivityDTO, id: string): Activity {
     type: 'assignment',
     title: payload.title ?? 'Novo trabalho',
     description: payload.description ?? '',
-    dueDate: payload.dueDate ? new Date(payload.dueDate) : now,
+    dueDate: toDate(payload.dueDate) ?? now,
     dueTime: payload.dueTime,
     assignmentType: payload.assignmentType ?? ('WRITTEN' as never),
     criteria: payload.criteria,

@@ -1,7 +1,7 @@
 import type { ReminderOffset, ReminderType } from '@/shared/types/activity'
 import {
   calculateReminderTimestamp,
-  offsetToMinutes,
+  reminderOffsetMinutesFor,
 } from '@/features/activities/domain/rules'
 
 /**
@@ -13,15 +13,16 @@ export function calculateReminderTimestampForEvent(
   reminderType: ReminderType,
   reminderTime: string,
   offset?: ReminderOffset,
+  timeZone?: string,
 ): Date {
-  return calculateReminderTimestamp(eventDate, reminderType, reminderTime, offset)
+  return calculateReminderTimestamp(eventDate, reminderType, reminderTime, offset, timeZone)
 }
 
 export function reminderOffsetMinutes(
   reminderType: ReminderType,
   offset?: ReminderOffset,
 ): number {
-  return offsetToMinutes(offset)
+  return reminderOffsetMinutesFor(reminderType, offset)
 }
 
 export function describeReminder(
@@ -29,9 +30,10 @@ export function describeReminder(
   reminderType: ReminderType,
   reminderTime: string,
   offset?: ReminderOffset,
+  timeZone?: string,
 ): { timestamp: Date; offsetMinutes: number } {
   return {
-    timestamp: calculateReminderTimestamp(eventDate, reminderType, reminderTime, offset),
-    offsetMinutes: reminderOffsetMinutes(reminderType, offset),
+    timestamp: calculateReminderTimestamp(eventDate, reminderType, reminderTime, offset, timeZone),
+    offsetMinutes: reminderOffsetMinutesFor(reminderType, offset),
   }
 }

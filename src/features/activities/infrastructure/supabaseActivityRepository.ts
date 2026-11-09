@@ -187,37 +187,49 @@ export class SupabaseActivityRepository implements ActivityRepository {
   }
 
   async update(activity: Activity): Promise<Activity> {
-    const { error: baseError } = await this.client
+    // Monta os lembretes antes de qualquer escrita: se algo estiver inválido,
+    // falha sem deixar a atividade parcialmente atualizada.
+    const reminders = reminderRows(activity)
+    const spec = specialization(activity)
+
+    const { data: base, error: baseError } = await this.client
       .from('activities')
       .update({
         title: activity.title,
         description: activity.description ?? null,
         subject_id: activity.subjectId ?? null,
-        updated_at: new Date().toISOString(),
+        updated_at: activity.updatedAt.toISOString(),
       })
       .eq('id', activity.id)
       .eq('user_id', activity.userId)
+      .select('updated_at')
+      .single()
     if (baseError) this.fail('atualizar atividade', baseError)
 
-    for (const table of ['tasks', 'exams', 'assignments']) {
-      await this.client.from(table).delete().eq('id', activity.id)
-    }
-
-    const spec = specialization(activity)
     if (spec) {
-      const { error } = await this.client.from(spec.table).insert(spec.row)
+      const { error } = await this.client.from(spec.table).upsert(spec.row)
       if (error) this.fail('atualizar especialização', error)
     }
 
-    await this.client.from('activity_reminders').delete().eq('activity_id', activity.id)
-    const reminders = reminderRows(activity)
+    // Upsert + remoção apenas dos que saíram evita perder lembretes caso o
+    // insert falhe no meio.
     if (reminders.length > 0) {
-      const { error } = await this.client.from('activity_reminders').insert(reminders)
+      const { error } = await this.client.from('activity_reminders').upsert(reminders)
       if (error) this.fail('atualizar lembretes', error)
     }
 
+    let deleteQuery = this.client.from('activity_reminders').delete().eq('activity_id', activity.id)
+    if (reminders.length > 0) {
+      const keepIds = reminders.map((reminder) => String(reminder.id)).join(',')
+      deleteQuery = deleteQuery.not('id', 'in', `(${keepIds})`)
+    }
+    const { error: deleteError } = await deleteQuery
+    if (deleteError) this.fail('atualizar lembretes', deleteError)
+
     invalidateDashboardCache(activity.userId)
-    return activity
+    // O trigger do banco define updated_at; devolvemos o valor real.
+    const savedUpdatedAt = base?.updated_at ? new Date(String(base.updated_at)) : activity.updatedAt
+    return { ...activity, updatedAt: savedUpdatedAt }
   }
 
   async delete(id: string, userId: string): Promise<void> {

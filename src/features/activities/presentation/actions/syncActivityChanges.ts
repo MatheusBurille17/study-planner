@@ -5,6 +5,8 @@ import { requireUser, UnauthorizedError } from '@/shared/lib/auth/helpers'
 import { getActivityRepository } from '@/features/activities/infrastructure/activityRepository'
 import { createActivitySchema, updateActivitySchema } from '@/features/activities/presentation/schemas/createActivitySchema'
 import { CreateActivityUseCase } from '@/features/activities/application/useCases/createActivity'
+import { buildActivityUpdate } from '@/features/activities/application/useCases/buildActivityUpdate'
+import { isConflict } from '@/features/activities/application/useCases/detectConflict'
 import type { Activity } from '@/shared/types/activity'
 
 export interface SyncEntry {
@@ -71,23 +73,25 @@ export async function syncActivityChangesAction(entries: SyncEntry[]): Promise<{
           continue
         }
 
-        const incomingUpdatedAt = new Date(
-          (entry.entityData as { updatedAt?: string }).updatedAt ?? 0,
-        )
-        if (!Number.isNaN(incomingUpdatedAt.getTime()) && existing.updatedAt.getTime() > incomingUpdatedAt.getTime()) {
-          // Servidor vence (last-write-wins).
+        const expectedRaw = (entry.entityData as { expectedUpdatedAt?: string }).expectedUpdatedAt
+        const expectedUpdatedAt = expectedRaw ? new Date(expectedRaw) : undefined
+        if (
+          expectedUpdatedAt &&
+          !Number.isNaN(expectedUpdatedAt.getTime()) &&
+          isConflict(existing.updatedAt, expectedUpdatedAt)
+        ) {
+          // Servidor vence quando a versão local se baseou em dados antigos.
           results.push({ id: entry.id, status: 'conflict', data: existing })
           continue
         }
 
-        const updated = await repository.update({
-          ...existing,
-          ...parsed.data,
-          id: existing.id,
-          userId: user.id,
-          type: existing.type,
-          updatedAt: new Date(Math.max(Date.now(), existing.updatedAt.getTime() + 1)),
-        } as Activity)
+        const updated = await repository.update(
+          buildActivityUpdate({
+            existing,
+            data: parsed.data,
+            userId: user.id,
+          }),
+        )
         results.push({ id: entry.id, status: 'synced', data: updated })
       } catch (error) {
         results.push({
