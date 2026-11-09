@@ -1,5 +1,5 @@
 /* Amanda's Study Planner — Service Worker (PWA, offline e push) */
-const VERSION = 'v3'
+const VERSION = 'v4'
 const ASSET_CACHE = `assets-${VERSION}`
 const API_CACHE = `api-${VERSION}`
 const OFFLINE_URL = '/offline'

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarHeart, GraduationCap, Sparkles } from 'lucide-react'
+import { CalendarHeart, Sparkles } from 'lucide-react'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,8 +10,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="relative mx-auto grid min-h-screen w-full max-w-6xl grid-cols-1 lg:grid-cols-[1.05fr_1fr]">
         <section className="hidden flex-col justify-between overflow-hidden rounded-r-[3rem] bg-gradient-to-br from-primary-700 via-primary-600 to-[#9a6bf0] p-12 text-white lg:flex">
           <Link href="/" className="flex items-center gap-3 text-white/90">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
-              <GraduationCap className="h-6 w-6" />
+            <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl ring-1 ring-white/30">
+              <img src="/brand/logo.png" alt="" className="h-full w-full object-cover" />
             </span>
             <div>
               <p className="font-serif text-xl leading-none">Study Planner</p>
@@ -50,8 +50,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         <section className="flex flex-col justify-center px-5 py-10 sm:px-10 lg:px-14">
           <Link href="/" className="mb-8 flex items-center gap-2.5 lg:hidden">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-white">
-              <GraduationCap className="h-5 w-5" />
+            <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-2xl ring-1 ring-line">
+              <img src="/brand/logo.png" alt="" className="h-full w-full object-cover" />
             </span>
             <span className="font-serif text-lg text-ink">Study Planner</span>
           </Link>

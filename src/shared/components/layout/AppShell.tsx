@@ -9,7 +9,6 @@ import {
   CalendarDays,
   CheckSquare,
   FileText,
-  GraduationCap,
   LayoutDashboard,
   LogOut,
   Plus,
@@ -59,8 +58,8 @@ export function AppShell({ user, children }: { user: User; children: React.React
       {/* Sidebar desktop */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line/80 bg-[#fbf8f4]/95 px-5 py-6 backdrop-blur lg:flex">
         <Link href="/dashboard" className="flex items-center gap-3 px-1">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 to-[#9a6bf0] text-white shadow-soft">
-            <GraduationCap className="h-6 w-6" />
+          <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl shadow-soft ring-1 ring-line">
+            <img src="/brand/logo.png" alt="" className="h-full w-full object-cover" />
           </span>
           <span>
             <span className="block font-serif text-lg leading-none text-ink">Study Planner</span>
@@ -135,8 +134,8 @@ export function AppShell({ user, children }: { user: User; children: React.React
       <header className="sticky top-0 z-30 border-b border-line/60 bg-background/90 px-4 py-3 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600 to-[#9a6bf0] text-white">
-              <GraduationCap className="h-5 w-5" />
+            <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl ring-1 ring-line">
+              <img src="/brand/logo.png" alt="" className="h-full w-full object-cover" />
             </span>
             <span>
               <span className="block text-[10px] uppercase tracking-[0.2em] text-muted">Bem-vinda</span>
