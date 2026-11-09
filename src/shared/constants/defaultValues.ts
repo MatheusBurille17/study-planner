@@ -7,6 +7,14 @@ export const SUBJECT_COLORS = [
   '#f3c4cf',
   '#d8c7b0',
   '#c9d8b6',
+  '#e4d0f5',
+  '#a8e0d0',
+  '#f5cba7',
+  '#f7d9e3',
+  '#d9e8b5',
+  '#c9c2f0',
+  '#f2d4e6',
+  '#d3e3e0',
 ] as const
 
 export const DEFAULT_SUBJECTS = [
