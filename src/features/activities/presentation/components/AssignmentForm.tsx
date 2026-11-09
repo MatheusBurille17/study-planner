@@ -302,6 +302,7 @@ export function AssignmentForm({ subjects, initialActivity, mode = 'create' }: A
         conflict={conflict}
         open={Boolean(conflict)}
         onResolve={(choice) => void resolveConflict(choice)}
+        subjects={subjects}
       />
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>

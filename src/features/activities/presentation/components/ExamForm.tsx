@@ -302,6 +302,7 @@ export function ExamForm({ subjects, initialActivity, mode = 'create' }: ExamFor
         conflict={conflict}
         open={Boolean(conflict)}
         onResolve={(choice) => void resolveConflict(choice)}
+        subjects={subjects}
       />
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>

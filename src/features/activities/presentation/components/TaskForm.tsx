@@ -322,6 +322,7 @@ export function TaskForm({ subjects, initialActivity, mode = 'create' }: TaskFor
         conflict={conflict}
         open={Boolean(conflict)}
         onResolve={(choice) => void resolveConflict(choice)}
+        subjects={subjects}
       />
 
       <p className="text-center text-[11px] text-muted">

@@ -11,6 +11,7 @@ import { createActivityAction } from '../actions/createActivity'
 import { updateActivityAction } from '../actions/updateActivity'
 import { saveActivityOffline } from '../lib/offlineSync'
 import { addToQueue } from '../../infrastructure/offlineQueue'
+import { toDate } from '@/shared/utils/dateHelpers'
 
 interface SubmitMeta {
   title: string
@@ -20,6 +21,8 @@ interface SubmitMeta {
 export interface ConflictState {
   serverData: Activity
   clientData: Partial<Activity>
+  /** Versão em que o editor se baseou (expectedUpdatedAt enviado ao servidor). */
+  clientUpdatedAt?: Date
 }
 
 export type ConflictChoice = 'reload' | 'discard' | 'keep-local'
@@ -101,6 +104,7 @@ export function useActivityCreation() {
         setConflict({
           serverData: result.error.serverData,
           clientData: (result.error.clientData ?? payload) as Partial<Activity>,
+          clientUpdatedAt: toDate(payload.expectedUpdatedAt),
         })
         return result
       }
