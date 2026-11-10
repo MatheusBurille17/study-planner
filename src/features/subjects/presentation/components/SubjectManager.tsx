@@ -105,15 +105,20 @@ export function SubjectManager({ subjects, activityCounts }: { subjects: Subject
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
           {subjects.map((subject) => (
-            <li key={subject.id} className="rounded-3xl border border-line bg-surface p-4 shadow-card">
+            <li key={subject.id} className="min-w-0 overflow-hidden rounded-3xl border border-line bg-surface p-4 shadow-card">
               <div className="flex items-start gap-3">
                 <span
                   className="mt-1 h-9 w-9 shrink-0 rounded-2xl"
                   style={{ backgroundColor: subject.color ?? '#c4b5fd' }}
                 />
                 <div className="min-w-0 flex-1">
-                  <h2 className="truncate font-serif text-lg text-ink">{subject.name}</h2>
-                  <p className="text-[11px] text-muted">
+                  <h2
+                    className="line-clamp-2 break-words font-serif text-base leading-snug text-ink sm:text-lg"
+                    title={subject.name}
+                  >
+                    {subject.name}
+                  </h2>
+                  <p className="mt-0.5 break-words text-[11px] leading-snug text-muted">
                     {subject.code ? `${subject.code} · ` : ''}
                     {subject.professor ?? 'Sem professor'}
                   </p>
@@ -121,7 +126,7 @@ export function SubjectManager({ subjects, activityCounts }: { subjects: Subject
                     {activityCounts[subject.id] ?? 0} atividades vinculadas
                   </p>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex shrink-0 gap-1">
                   <button
                     type="button"
                     onClick={() => openEdit(subject)}

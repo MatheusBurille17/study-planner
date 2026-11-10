@@ -30,8 +30,8 @@ export default async function ProfilePage() {
           </span>
           <div className="min-w-0">
             <h2 className="font-serif text-2xl text-ink">{user.name ?? 'Estudante'}</h2>
-            <p className="mt-0.5 flex items-center gap-1.5 text-sm text-muted">
-              <Mail className="h-3.5 w-3.5" /> {user.email}
+            <p className="mt-0.5 flex min-w-0 items-center gap-1.5 break-all text-sm text-muted">
+              <Mail className="h-3.5 w-3.5 shrink-0" /> {user.email}
             </p>
           </div>
         </div>

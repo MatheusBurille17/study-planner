@@ -126,8 +126,10 @@ export function ActivityDetail({ activity, subject }: { activity: Activity; subj
               </span>
             )}
           </div>
-          <h1 className="mt-3 font-serif text-3xl leading-tight text-ink sm:text-4xl">{activity.title}</h1>
-          {activity.description && <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{activity.description}</p>}
+          <h1 className="mt-3 break-words font-serif text-3xl leading-tight text-ink sm:text-4xl">{activity.title}</h1>
+          {activity.description && (
+            <p className="mt-2 max-w-2xl break-words text-sm leading-relaxed text-muted">{activity.description}</p>
+          )}
 
           <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted">
             {subject && (

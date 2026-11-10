@@ -20,9 +20,9 @@ export function TimeSlotGrid({
   onDayClick?: (date: Date) => void
 }) {
   return (
-    <div className="overflow-x-auto scrollbar-none">
-      <div className="min-w-[760px]">
-        <div className="grid grid-cols-[52px_repeat(7,minmax(0,1fr))]">
+    <div className="w-full min-w-0">
+      <div>
+        <div className="grid grid-cols-[44px_repeat(7,minmax(0,1fr))] sm:grid-cols-[52px_repeat(7,minmax(0,1fr))]">
           <div />
           {days.map((day) => (
             <button
@@ -45,7 +45,10 @@ export function TimeSlotGrid({
         </div>
 
         {HOURS.map((hour) => (
-          <div key={hour} className="grid grid-cols-[52px_repeat(7,minmax(0,1fr))] border-b border-line/60">
+          <div
+            key={hour}
+            className="grid grid-cols-[44px_repeat(7,minmax(0,1fr))] border-b border-line/60 sm:grid-cols-[52px_repeat(7,minmax(0,1fr))]"
+          >
             <div className="py-2 pr-2 text-right text-[10px] text-muted">{String(hour).padStart(2, '0')}:00</div>
             {days.map((day) => {
               const key = format(day, 'yyyy-MM-dd')
@@ -116,23 +119,91 @@ export function WeekView({
         </div>
       </div>
 
-      {allDay.length > 0 && (
-        <div className="mb-4 grid grid-cols-7 gap-1 rounded-2xl bg-primary-50/40 p-2" aria-label="Atividades sem horário">
-          {days.map((day) => {
-            const key = format(day, 'yyyy-MM-dd')
-            const items = (grouped.get(key) ?? []).filter((activity) => !activity.time)
-            return (
-              <div key={key} className="min-h-[24px] space-y-1">
-                {items.map((activity) => (
-                  <CalendarActivityCard key={activity.id} activity={activity} showTime={false} compact />
-                ))}
-              </div>
-            )
-          })}
-        </div>
-      )}
+      {/*
+       * No mobile a grade de 7 colunas não cabe sem rolagem horizontal.
+       * Mostramos uma agenda vertical por dia — todo o conteúdo continua
+       * visível e a tela nunca rola para os lados.
+       */}
+      <div className="space-y-3 md:hidden">
+        {days.map((day) => {
+          const key = format(day, 'yyyy-MM-dd')
+          const items = grouped.get(key) ?? []
+          const sorted = [...items].sort(
+            (a, b) =>
+              (a.time ?? '').localeCompare(b.time ?? '') || a.title.localeCompare(b.title, 'pt-BR'),
+          )
+          const today = isToday(day)
 
-      <TimeSlotGrid days={days} activitiesByDay={grouped} onDayClick={onDayClick} />
+          return (
+            <div
+              key={key}
+              className={cn(
+                'rounded-2xl border p-3',
+                today ? 'border-primary/30 bg-primary-50/30' : 'border-line/70 bg-background/40',
+              )}
+            >
+              <button
+                type="button"
+                onClick={() => onDayClick?.(day)}
+                className="flex w-full items-center justify-between gap-2 text-left"
+              >
+                <span className="min-w-0">
+                  <span
+                    className={cn(
+                      'block text-[10px] font-semibold uppercase tracking-[0.16em]',
+                      today ? 'text-primary' : 'text-muted',
+                    )}
+                  >
+                    {today ? 'Hoje' : format(day, 'EEEE', { locale: ptBR })}
+                  </span>
+                  <span
+                    className={cn(
+                      'mt-0.5 block text-sm font-medium',
+                      today ? 'text-primary-800' : 'text-ink',
+                    )}
+                  >
+                    {format(day, "d 'de' MMMM", { locale: ptBR })}
+                  </span>
+                </span>
+                <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-[10px] font-medium text-muted ring-1 ring-line">
+                  {items.length === 0
+                    ? 'Livre'
+                    : `${items.length} ${items.length === 1 ? 'atividade' : 'atividades'}`}
+                </span>
+              </button>
+
+              {sorted.length > 0 && (
+                <div className="mt-2.5 space-y-1.5">
+                  {sorted.map((activity) => (
+                    <CalendarActivityCard key={activity.id} activity={activity} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Grade de horários: apenas em telas médias/grandes, onde cabe sem rolagem. */}
+      <div className="hidden md:block">
+        {allDay.length > 0 && (
+          <div className="mb-4 grid grid-cols-7 gap-1 rounded-2xl bg-primary-50/40 p-2" aria-label="Atividades sem horário">
+            {days.map((day) => {
+              const key = format(day, 'yyyy-MM-dd')
+              const items = (grouped.get(key) ?? []).filter((activity) => !activity.time)
+              return (
+                <div key={key} className="min-h-[24px] min-w-0 space-y-1">
+                  {items.map((activity) => (
+                    <CalendarActivityCard key={activity.id} activity={activity} showTime={false} compact />
+                  ))}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        <TimeSlotGrid days={days} activitiesByDay={grouped} onDayClick={onDayClick} />
+      </div>
     </section>
   )
 }
