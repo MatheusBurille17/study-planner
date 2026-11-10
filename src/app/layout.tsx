@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/shared/components/ui/toast'
 import { AuthProvider } from '@/features/auth/presentation/components/AuthProvider'
@@ -6,6 +7,24 @@ import { QueryProvider } from '@/shared/config/queryClient'
 import { ServiceWorkerInitializer } from '@/features/notifications/presentation/components/ServiceWorkerInitializer'
 import { VersionGuard } from '@/shared/components/VersionGuard'
 import { APP_NAME, APP_SHORT_NAME } from '@/shared/constants/config'
+
+/*
+ * Fontes servidas pelo próprio domínio (next/font) em vez de um @import do
+ * Google Fonts no CSS: elimina uma conexão externa que bloqueava a primeira
+ * pintura e evita mudança de layout quando a fonte termina de carregar.
+ */
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-sans',
+})
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-serif',
+  style: ['normal', 'italic'],
+})
 
 export const metadata: Metadata = {
   title: {
@@ -47,7 +66,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={`${inter.variable} ${playfair.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />

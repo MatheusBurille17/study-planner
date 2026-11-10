@@ -65,9 +65,18 @@ export function ActivityListPage({
   }, [router])
 
   useEffect(() => {
+    /*
+     * Filtros são 100% client-side. Atualizamos a URL com history.replaceState
+     * em vez de router.replace: o link continua compartilhável, mas não
+     * disparamos uma nova requisição RSC ao servidor a cada tecla/busca.
+     */
     const query = serializeFilterCriteria(filters)
     const target = query ? `?${query}` : ''
-    router.replace(`${window.location.pathname}${target}`, { scroll: false })
+    const nextUrl = `${window.location.pathname}${target}`
+    const currentUrl = `${window.location.pathname}${window.location.search}`
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState(null, '', nextUrl)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters])
 
@@ -109,8 +118,8 @@ export function ActivityListPage({
       return
     }
     toast.success(nextStatus === 'COMPLETED' ? 'Tarefa concluída!' : 'Status atualizado')
+    // O listener de `activity:changed` abaixo já faz um único router.refresh().
     window.dispatchEvent(new CustomEvent('activity:changed'))
-    router.refresh()
   }
 
   async function handleBulkStatus(status: string) {
@@ -124,7 +133,6 @@ export function ActivityListPage({
     toast.success(`Status atualizado em ${result.affected ?? selectedIds.length} atividades`)
     setSelectedIds([])
     window.dispatchEvent(new CustomEvent('activity:changed'))
-    router.refresh()
   }
 
   async function handleBulkDelete() {
@@ -138,7 +146,6 @@ export function ActivityListPage({
     toast.success(`${result.affected ?? selectedIds.length} atividades movidas para a lixeira`)
     setSelectedIds([])
     window.dispatchEvent(new CustomEvent('activity:changed'))
-    router.refresh()
   }
 
   return (

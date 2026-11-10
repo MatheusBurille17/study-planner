@@ -21,7 +21,11 @@ test.describe('atividades', () => {
   test('busca filtra tarefas', async ({ page }) => {
     await registerUser(page)
     await page.goto('/activities')
-    const search = page.getByLabel('Buscar atividades')
+    await expect(page.getByRole('heading', { name: 'Tarefas' })).toBeVisible()
+    // Em navegação completa (hard load) o streaming do React mantém por alguns
+    // milissegundos uma cópia oculta do segmento em `div[hidden]`. Filtramos
+    // apenas o controle visível para não colidir com essa cópia transitória.
+    const search = page.getByLabel('Buscar atividades').filter({ visible: true })
     await search.fill('derivadas')
     await page.waitForTimeout(400)
     await expect(page.getByText('Revisar derivadas e integrais')).toBeVisible()

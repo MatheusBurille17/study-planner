@@ -1,5 +1,5 @@
 /* Amanda's Study Planner — Service Worker (PWA, offline e push) */
-const VERSION = 'v4'
+const VERSION = 'v5'
 const ASSET_CACHE = `assets-${VERSION}`
 const API_CACHE = `api-${VERSION}`
 const OFFLINE_URL = '/offline'
@@ -98,6 +98,17 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
 
+  /*
+   * Navegação do App Router: o Next busca o payload RSC via `fetch` (com o
+   * header `RSC`) e também faz prefetch das rotas. Deixar o Service Worker
+   * interceptar e gravar esses payloads adiciona latência a cada troca de
+   * tela e enche o cache com HTML/RSC dinâmico. Essas requisições seguem
+   * direto para a rede, sem passar pelo SW.
+   */
+  if (request.headers.get('RSC') === '1' || request.headers.get('Next-Router-Prefetch') === '1') {
+    return
+  }
+
   if (request.mode === 'navigate') {
     event.respondWith(networkFirst(request))
     return
@@ -106,11 +117,13 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(cacheFirst(request))
     return
   }
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(staleWhileRevalidate(request))
+  if (url.pathname.startsWith('/api/auth/') || url.pathname === '/api/version') {
+    // Autenticação e versão precisam ser sempre frescas.
     return
   }
-  event.respondWith(networkFirst(request))
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(staleWhileRevalidate(request))
+  }
 })
 
 self.addEventListener('push', (event) => {

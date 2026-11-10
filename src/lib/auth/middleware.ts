@@ -37,6 +37,24 @@ interface SessionState {
 async function getSessionState(request: NextRequest): Promise<SessionState> {
   const token = request.cookies.get(AUTH_COOKIE)?.value
 
+  /*
+   * Sem cookie não há sessão possível. Evita criar o cliente Supabase e fazer
+   * uma chamada de rede em cada acesso anônimo (login, register, assets, etc.).
+   *
+   * Em modo Supabase também mantemos o fluxo normal quando existe o cookie de
+   * sessão do próprio SDK (`sb-*-auth-token`), pois o `getClaims()` abaixo
+   * consegue renovar a sessão mesmo que o nosso `auth-token` tenha expirado.
+   */
+  const hasSupabaseSessionCookie =
+    isSupabaseConfigured() &&
+    request.cookies
+      .getAll()
+      .some((cookie) => cookie.name.startsWith('sb-') && cookie.name.includes('auth-token'))
+
+  if (!token && !hasSupabaseSessionCookie) {
+    return { authed: false, response: NextResponse.next({ request }) }
+  }
+
   if (isSupabaseConfigured()) {
     let response = NextResponse.next({ request })
     try {

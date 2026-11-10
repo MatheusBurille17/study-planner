@@ -74,6 +74,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
               <Link
                 key={href}
                 href={href}
+                prefetch
                 className={cn(
                   'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors',
                   active
@@ -210,6 +211,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
             <Link
               key={href}
               href={href}
+              prefetch
               className={cn(
                 'flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px]',
                 isActive(pathname, href) ? 'font-semibold text-primary' : 'text-muted',
@@ -235,6 +237,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
             <Link
               key={href}
               href={href}
+              prefetch
               className={cn(
                 'flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[10px]',
                 isActive(pathname, href) ? 'font-semibold text-primary' : 'text-muted',

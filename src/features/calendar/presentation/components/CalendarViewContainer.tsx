@@ -1,19 +1,9 @@
 'use client'
 
-import dynamic from 'next/dynamic'
 import type { CalendarActivity } from '@/shared/types/calendarModels'
 import { MonthView } from './MonthView'
-import { CalendarSkeleton } from './CalendarSkeleton'
-
-const WeekView = dynamic(() => import('./WeekView').then((module) => module.WeekView), {
-  loading: () => <CalendarSkeleton />,
-  ssr: false,
-})
-
-const DayView = dynamic(() => import('./DayView').then((module) => module.DayView), {
-  loading: () => <CalendarSkeleton />,
-  ssr: false,
-})
+import { WeekView } from './WeekView'
+import { DayView } from './DayView'
 
 export function CalendarViewContainer({
   view,

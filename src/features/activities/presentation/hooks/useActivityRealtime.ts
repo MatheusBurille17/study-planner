@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { getSupabaseBrowserClient } from '@/shared/lib/supabase/client'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { isSupabaseConfigured } from '@/shared/lib/supabase/config'
 
 /** Agrupa rajadas de eventos em um único refresh (evita baixar a lista N vezes). */
 const REALTIME_DEBOUNCE_MS = 1_500
@@ -21,6 +22,7 @@ export function useActivityRealtime(userId: string | undefined): void {
   useEffect(() => {
     if (!userId) return
 
+    let cancelled = false
     let debounceTimer: ReturnType<typeof setTimeout> | null = null
     let lastRefreshAt = 0
 
@@ -44,9 +46,21 @@ export function useActivityRealtime(userId: string | undefined): void {
       }, REALTIME_DEBOUNCE_MS)
     }
 
-    const supabase = getSupabaseBrowserClient()
+    /*
+     * O SDK do Supabase (~190 kB) só é necessário quando o Realtime está
+     * configurado. Importá-lo sob demanda mantém as telas de listagem leves e
+     * acelera a hidratação — inclusive no modo demonstração, em que não há
+     * conexão Realtime alguma.
+     */
+    let supabase: SupabaseClient | null = null
     let channel: { unsubscribe: () => void } | null = null
-    if (supabase) {
+
+    const setupRealtime = async () => {
+      if (!isSupabaseConfigured()) return
+      const { getSupabaseBrowserClient } = await import('@/shared/lib/supabase/client')
+      if (cancelled) return
+      supabase = getSupabaseBrowserClient()
+      if (!supabase) return
       channel = supabase
         .channel(`activities:${userId}`)
         .on(
@@ -56,6 +70,7 @@ export function useActivityRealtime(userId: string | undefined): void {
         )
         .subscribe()
     }
+    void setupRealtime()
 
     // Eventos locais (disparados pelas mutations) só invalidam o cache.
     // Se reemitisse `activity:changed` aqui, o listener entraria em loop.
@@ -72,6 +87,7 @@ export function useActivityRealtime(userId: string | undefined): void {
     }, FALLBACK_REFRESH_MS)
 
     return () => {
+      cancelled = true
       window.removeEventListener('activity:changed', onLocalChange)
       window.clearInterval(interval)
       if (debounceTimer) clearTimeout(debounceTimer)

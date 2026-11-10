@@ -104,6 +104,7 @@ export async function syncActivityChangesAction(entries: SyncEntry[]): Promise<{
 
     revalidatePath('/dashboard')
     revalidatePath('/activities')
+    revalidatePath('/assessments')
     revalidatePath('/calendar')
     const synced = results.filter((result) => result.status === 'synced').length
     const conflicts = results.filter((result) => result.status === 'conflict').length

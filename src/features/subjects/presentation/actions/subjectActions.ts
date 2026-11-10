@@ -34,6 +34,8 @@ export async function createSubjectAction(input: unknown): Promise<SubjectAction
     revalidatePath('/subjects')
     revalidatePath('/activities')
     revalidatePath('/assessments')
+    revalidatePath('/calendar')
+    revalidatePath('/dashboard')
     return { success: true, subject }
   } catch (error) {
     if (error instanceof UnauthorizedError) {
@@ -55,6 +57,8 @@ export async function updateSubjectAction(id: string, input: unknown): Promise<S
     revalidatePath('/subjects')
     revalidatePath('/activities')
     revalidatePath('/assessments')
+    revalidatePath('/calendar')
+    revalidatePath('/dashboard')
     return { success: true, subject }
   } catch (error) {
     if (error instanceof UnauthorizedError) {
@@ -72,6 +76,8 @@ export async function deleteSubjectAction(id: string): Promise<SubjectActionResu
     revalidatePath('/subjects')
     revalidatePath('/activities')
     revalidatePath('/assessments')
+    revalidatePath('/calendar')
+    revalidatePath('/dashboard')
     return { success: true }
   } catch (error) {
     if (error instanceof UnauthorizedError) {

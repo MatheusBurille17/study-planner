@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { addDays, addMonths, addWeeks, format } from 'date-fns'
 import type { CalendarFilters, CalendarViewMode } from '@/shared/types/calendarModels'
 
@@ -13,9 +12,13 @@ export function useCalendarState(
   const [view, setView] = useState<CalendarViewMode>(initialView)
   const [date, setDate] = useState<Date>(initialDate)
   const [filters, setFilters] = useState<CalendarFilters>(initialFilters)
-  const router = useRouter()
 
   useEffect(() => {
+    /*
+     * Navegar entre mês/semana/dia e filtrar é instantâneo porque os dados já
+     * estão no cliente. Mantemos a URL sincronizada sem `router.replace`,
+     * que forçava o servidor a re-renderizar o calendário a cada mudança.
+     */
     const params = new URLSearchParams()
     if (view !== 'month') params.set('view', view)
     params.set('date', format(date, 'yyyy-MM-dd'))
@@ -25,7 +28,11 @@ export function useCalendarState(
       if (value) params.set('filter', value)
     }
     if (filters.subjectId) params.set('subject', filters.subjectId)
-    router.replace(`/calendar?${params.toString()}`, { scroll: false })
+    const nextUrl = `/calendar?${params.toString()}`
+    const currentUrl = `${window.location.pathname}${window.location.search}`
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState(null, '', nextUrl)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, date, filters])
 

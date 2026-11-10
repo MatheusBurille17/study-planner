@@ -36,6 +36,7 @@ export async function createActivityAction(input: unknown): Promise<CreateActivi
     if (result.success) {
       revalidatePath('/dashboard')
       revalidatePath('/activities')
+      revalidatePath('/assessments')
       revalidatePath('/calendar')
     }
 

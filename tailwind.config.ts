@@ -35,8 +35,8 @@ const config: Config = {
         sky: '#bcd7f2',
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'sans-serif'],
-        serif: ['"Playfair Display"', 'Georgia', 'Cambria', 'serif'],
+        sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'sans-serif'],
+        serif: ['var(--font-serif)', 'Georgia', 'Cambria', 'serif'],
       },
       boxShadow: {
         soft: '0 10px 30px -18px rgba(63, 42, 94, 0.35)',

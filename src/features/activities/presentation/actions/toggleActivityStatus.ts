@@ -32,6 +32,7 @@ export async function toggleActivityStatusAction(
     const saved = await repository.update(updated)
     revalidatePath('/dashboard')
     revalidatePath('/activities')
+    revalidatePath('/assessments')
     revalidatePath('/calendar')
     return { success: true, activity: saved }
   } catch (error) {

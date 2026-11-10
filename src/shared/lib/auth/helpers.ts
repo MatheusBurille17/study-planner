@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 import type { User } from '@/shared/types/user'
 import { AUTH_COOKIE, REFRESH_COOKIE } from '@/shared/constants/config'
@@ -52,7 +53,12 @@ export async function clearAuthCookies(): Promise<void> {
   cookieStore.delete(REFRESH_COOKIE)
 }
 
-export async function getCurrentUser(): Promise<User | null> {
+/**
+ * `cache` do React deduplica a chamada dentro da mesma requisição: o layout
+ * autenticado e a página chamam `getCurrentUser`, mas o Supabase (ou a
+ * verificação do cookie) é consultado uma única vez por navegação.
+ */
+export const getCurrentUser = cache(async (): Promise<User | null> => {
   if (isSupabaseConfigured()) {
     const supabase = await createSupabaseServerClient()
     if (!supabase) return null
@@ -70,12 +76,12 @@ export async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies()
   const payload = await verifySessionToken(cookieStore.get(AUTH_COOKIE)?.value)
   return payload ? sessionPayloadToUser(payload) : null
-}
+})
 
-export async function getSessionToken(): Promise<string | null> {
+export const getSessionToken = cache(async (): Promise<string | null> => {
   const cookieStore = await cookies()
   return cookieStore.get(AUTH_COOKIE)?.value ?? null
-}
+})
 
 export class UnauthorizedError extends Error {
   constructor(message = 'Usuário não autenticado') {
