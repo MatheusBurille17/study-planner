@@ -38,7 +38,56 @@ supabase functions deploy send-reminders --no-verify-jwt
 
 ## Agendamento
 
-No painel do Supabase, configure o Cron (Database → Cron Jobs) ou execute:
+A migration `supabase/migrations/005_schedule_send_reminders_cron.sql` cria as
+funções `configure_send_reminders_cron` e `remove_send_reminders_cron` e tenta
+agendar o job automaticamente caso a URL esteja no Vault ou em
+`app.settings.send_reminders_url`.
+
+Depois do `supabase db push`, a forma mais simples de configurar é rodar uma vez
+no SQL Editor:
+
+```sql
+select public.configure_send_reminders_cron(
+  'https://<PROJECT_REF>.supabase.co/functions/v1/send-reminders',
+  '<CRON_SECRET>'
+);
+```
+
+O job fica agendado a cada 5 minutos (`*/5 * * * *`) e a função é idempotente:
+chamar de novo apenas reagenda, sem duplicar.
+
+Alternativa com **Vault** (o segredo não aparece no histórico do SQL Editor):
+
+```sql
+select vault.create_secret(
+  'https://<PROJECT_REF>.supabase.co/functions/v1/send-reminders',
+  'send_reminders_url'
+);
+select vault.create_secret('<CRON_SECRET>', 'send_reminders_secret');
+```
+
+Depois reaplique a migration (ou chame
+`select public.configure_send_reminders_cron(...)` com os valores).
+
+> O comando do job (incluindo o `Authorization`) fica salvo em
+> `cron.job.command`, visível apenas para o role `postgres`. O Vault evita que
+> o segredo apareça no histórico do SQL Editor, mas não no `cron.job`.
+
+Também é possível configurar via setting do banco:
+
+```sql
+alter database postgres set app.settings.send_reminders_url =
+  'https://<PROJECT_REF>.supabase.co/functions/v1/send-reminders';
+alter database postgres set app.settings.send_reminders_secret = '<CRON_SECRET>';
+```
+
+Para remover o agendamento:
+
+```sql
+select public.remove_send_reminders_cron();
+```
+
+Se preferir criar o job manualmente, o SQL equivalente é:
 
 ```sql
 select cron.schedule(
@@ -49,17 +98,14 @@ select cron.schedule(
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer <CRON_SECRET>'
-    )
+    ),
+    body := '{}'::jsonb
   )$$
 );
 ```
 
-Se as extensões ainda não estiverem habilitadas:
-
-```sql
-create extension if not exists pg_cron;
-create extension if not exists pg_net;
-```
+As extensões `pg_cron` e `pg_net` são habilitadas pela migration. Se a criação
+automática falhar, habilite em **Database → Extensions** no Dashboard.
 
 ## Diagnóstico
 

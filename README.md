@@ -56,7 +56,14 @@ Abra `http://localhost:3000` e crie uma conta. Sem variáveis de ambiente o app 
    ```bash
    supabase functions deploy send-reminders --no-verify-jwt
    ```
-   Configure o CRON de 5 em 5 minutos (instruções, secrets e diagnóstico em `supabase/functions/send-reminders/README.md`).
+5. Configure o CRON (migration `005_schedule_send_reminders_cron.sql`). Depois do `supabase db push`, rode uma vez no SQL Editor:
+   ```sql
+   select public.configure_send_reminders_cron(
+     'https://<PROJECT_REF>.supabase.co/functions/v1/send-reminders',
+     '<CRON_SECRET>'
+   );
+   ```
+   Detalhes, secrets e diagnóstico em `supabase/functions/send-reminders/README.md`.
 
 ## 🔔 Lembretes
 
