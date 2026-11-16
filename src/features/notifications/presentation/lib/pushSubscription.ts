@@ -20,6 +20,30 @@ export interface BrowserSubscriptionResult {
 }
 
 /**
+ * Garante que exista um Service Worker ativo. Sem isso, `serviceWorker.ready`
+ * fica pendente para sempre (por exemplo se o registro falhou ou foi removido).
+ */
+async function getPushRegistration(): Promise<ServiceWorkerRegistration> {
+  const existing = await navigator.serviceWorker.getRegistration('/')
+  if (existing?.active) return existing
+
+  await navigator.serviceWorker.register('/service-worker.js', {
+    scope: '/',
+    updateViaCache: 'none',
+  })
+
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<never>((_, reject) => {
+      setTimeout(
+        () => reject(new Error('O Service Worker não ficou pronto. Recarregue a página e tente novamente.')),
+        10_000,
+      )
+    }),
+  ])
+}
+
+/**
  * Solicita permissão, cria a inscrição push no navegador e a envia ao servidor.
  * Sem chave VAPID (modo demo), retorna simulated=true.
  */
@@ -33,7 +57,15 @@ export async function subscribeBrowserToPush(): Promise<BrowserSubscriptionResul
     return { success: false, error: 'Permissão de notificação não concedida' }
   }
 
-  const registration = await navigator.serviceWorker.ready
+  let registration: ServiceWorkerRegistration
+  try {
+    registration = await getPushRegistration()
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Service Worker indisponível',
+    }
+  }
   const existing = await registration.pushManager.getSubscription()
   if (existing) {
     const json = existing.toJSON() as { endpoint?: string; keys?: { p256dh?: string; auth?: string } }
@@ -80,7 +112,7 @@ export async function subscribeBrowserToPush(): Promise<BrowserSubscriptionResul
 
 export async function unsubscribeBrowserPush(): Promise<void> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
-  const registration = await navigator.serviceWorker.ready
-  const subscription = await registration.pushManager.getSubscription()
+  const registration = await navigator.serviceWorker.getRegistration('/')
+  const subscription = await registration?.pushManager.getSubscription()
   await subscription?.unsubscribe()
 }

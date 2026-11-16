@@ -54,16 +54,16 @@ Abra `http://localhost:3000` e crie uma conta. Sem variáveis de ambiente o app 
    Preencha `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_SUBJECT`.
 4. Deploy da Edge Function:
    ```bash
-   supabase functions deploy send-reminders
+   supabase functions deploy send-reminders --no-verify-jwt
    ```
-   Configure o CRON de 5 em 5 minutos (instruções em `supabase/functions/send-reminders/README.md`).
+   Configure o CRON de 5 em 5 minutos (instruções, secrets e diagnóstico em `supabase/functions/send-reminders/README.md`).
 
 ## 🔔 Lembretes
 
-- Provas e entregas: **24h antes**
+- Provas e entregas: **24h antes** (mesmo sem lembrete manual configurado)
 - Tarefas: **3h antes** (configurável de 0 a 6h)
 - Lembretes personalizados por atividade: até **3**, com tipos como 1 dia antes, 2 horas antes ou offset customizado
-- Horário de silêncio configurável (suporta atravessar meia-noite)
+- Horário de silêncio configurável (suporta atravessar meia-noite); lembretes que vencem no silêncio são adiados para o fim dele
 - Em produção Supabase: Edge Function `send-reminders`; local: `POST /api/notifications/send`
 - Sem VAPID configurado, o envio é **simulado** e registrado nos logs
 

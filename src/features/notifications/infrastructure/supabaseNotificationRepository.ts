@@ -156,12 +156,16 @@ export class SupabaseNotificationRepository implements NotificationRepository {
   }
 
   async logNotification(log: Omit<NotificationLog, 'id'>): Promise<NotificationLog> {
+    // O CHECK de `notification_logs.activity_type` aceita apenas minúsculas.
+    const rawType = log.activityType ? String(log.activityType).toLowerCase() : ''
+    const activityType =
+      rawType === 'exam' || rawType === 'assignment' || rawType === 'task' ? rawType : null
     const { data, error } = await this.client
       .from('notification_logs')
       .insert({
         user_id: log.userId,
         activity_id: log.activityId ?? null,
-        activity_type: log.activityType ? String(log.activityType).toUpperCase() : null,
+        activity_type: activityType,
         title: log.title,
         body: log.body,
         sent_at: log.sentAt.toISOString(),

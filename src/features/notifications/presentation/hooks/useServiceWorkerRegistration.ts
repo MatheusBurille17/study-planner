@@ -1,20 +1,15 @@
 'use client'
 
 import { useEffect } from 'react'
-import {
-  registerServiceWorker,
-  unregisterServiceWorker,
-} from '@/shared/lib/notifications/service-worker-registration'
+import { registerServiceWorker } from '@/shared/lib/notifications/service-worker-registration'
 
 export function useServiceWorkerRegistration(): void {
   useEffect(() => {
-    // Em desenvolvimento o Service Worker cacheia chunks com nomes estáveis,
-    // o que pode servir JavaScript antigo e causar erros de hidratação.
-    if (process.env.NODE_ENV !== 'production') {
-      void unregisterServiceWorker()
-      return
-    }
-
+    /*
+     * Em desenvolvimento o Service Worker não intercepta requisições (o
+     * próprio SW ignora localhost), mas precisa ficar registrado para que
+     * notificações push possam ser ativadas e testadas localmente.
+     */
     void registerServiceWorker()
   }, [])
 }

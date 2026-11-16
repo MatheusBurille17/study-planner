@@ -1,5 +1,5 @@
 /* Amanda's Study Planner — Service Worker (PWA, offline e push) */
-const VERSION = 'v5'
+const VERSION = 'v6'
 const ASSET_CACHE = `assets-${VERSION}`
 const API_CACHE = `api-${VERSION}`
 const OFFLINE_URL = '/offline'
@@ -99,6 +99,15 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
 
   /*
+   * Em desenvolvimento (localhost) o SW existe apenas para receber push.
+   * Não intercepta requisições: os chunks do dev server têm nomes estáveis e
+   * o cache poderia servir JavaScript antigo, causando erros de hidratação.
+   */
+  if (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1') {
+    return
+  }
+
+  /*
    * Navegação do App Router: o Next busca o payload RSC via `fetch` (com o
    * header `RSC`) e também faz prefetch das rotas. Deixar o Service Worker
    * interceptar e gravar esses payloads adiciona latência a cada troca de
@@ -145,7 +154,7 @@ self.addEventListener('push', (event) => {
       url: payload.url || payload.data?.url || '/dashboard',
       activityId: payload.data?.activityId,
       activityType: payload.data?.activityType,
-      notificationId: payload.notificationId,
+      notificationId: payload.notificationId ?? payload.data?.notificationId,
     },
     vibrate: payload.vibration === false ? undefined : [120, 60, 120],
     silent: payload.sound === false,

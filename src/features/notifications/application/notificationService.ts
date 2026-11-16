@@ -58,6 +58,7 @@ export async function deliverReminder(input: {
       data: {
         activityId: input.activity.id,
         activityType: input.activity.type,
+        notificationId: log.id,
         url: `/activities/${input.activity.id}`,
       },
     })
